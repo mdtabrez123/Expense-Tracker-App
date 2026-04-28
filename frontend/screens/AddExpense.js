@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import api from '../api/axios';
 import { Feather } from '@expo/vector-icons';
 
 const CATEGORIES = [
@@ -18,7 +19,6 @@ const AddExpense = ({ navigation }) => {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_URL = 'http://172.16.33.96:5000/api/expenses';
 
   const handleSave = async () => {
     if (!amount || Number(amount) <= 0) {
@@ -35,12 +35,15 @@ const AddExpense = ({ navigation }) => {
       const token = await AsyncStorage.getItem('token');
       const config = { headers: { 'x-auth-token': token } };
 
-      await axios.post(API_URL, {
+      await api.post('/expenses', {
         amount: Number(amount),
         category: category,
         note: note.trim()
       }, config);
       
+      if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+        document.activeElement.blur();
+      }
       navigation.goBack();
     } catch (error) {
       console.error(error);
@@ -54,7 +57,15 @@ const AddExpense = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+                document.activeElement.blur();
+              }
+              navigation.goBack();
+            }} 
+            style={styles.backBtn}
+          >
             <Feather name="arrow-left" size={24} color="#111827" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Expense</Text>
@@ -145,7 +156,7 @@ const styles = StyleSheet.create({
   inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, marginBottom: 24 },
   textInput: { flex: 1, fontSize: 16, color: '#111827', outlineStyle: 'none' },
   footer: { paddingTop: 24, paddingBottom: 40, backgroundColor: '#FFFFFF' },
-  saveBtn: { backgroundColor: '#4F46E5', borderRadius: 16, paddingVertical: 18, alignItems: 'center', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  saveBtn: { backgroundColor: '#4F46E5', borderRadius: 16, paddingVertical: 18, alignItems: 'center', ...Platform.select({ web: { boxShadow: '0px 4px 8px rgba(79, 70, 229, 0.3)' }, default: { shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 } }) },
   saveBtnText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
 });
 

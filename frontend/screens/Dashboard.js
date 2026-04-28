@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, SafeAreaView, StyleSheet, ScrollView, Platform } from 'react-native';
-import axios from 'axios';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ExpenseCard from '../components/ExpenseCard';
 import { AuthContext } from '../context/AuthContext';
@@ -11,7 +12,6 @@ const Dashboard = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const { logout } = useContext(AuthContext);
 
-  const API_URL = 'http://172.16.33.96:5000/api/expenses'; 
 
   useEffect(() => {
     fetchExpenses();
@@ -30,7 +30,7 @@ const Dashboard = ({ navigation }) => {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
       const config = { headers: { 'x-auth-token': token } };
-      const res = await axios.get(API_URL, config);
+      const res = await api.get('/expenses', config);
       setExpenses(res.data);
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -121,7 +121,12 @@ const Dashboard = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.fab}
-          onPress={() => navigation.navigate('AddExpense')}
+          onPress={() => {
+            if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+              document.activeElement.blur();
+            }
+            navigation.navigate('AddExpense');
+          }}
         >
           <Feather name="plus" size={32} color="#FFF" />
         </TouchableOpacity>
@@ -141,19 +146,19 @@ const styles = StyleSheet.create({
   greetingText: { fontSize: 14, color: '#6B7280' },
   userName: { fontSize: 18, fontWeight: 'bold', color: '#111827' },
   logoutBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FEF2F2', alignItems: 'center', justifyContent: 'center' },
-  balanceCard: { backgroundColor: '#4F46E5', borderRadius: 20, padding: 24, marginBottom: 24, shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
+  balanceCard: { backgroundColor: '#4F46E5', borderRadius: 20, padding: 24, marginBottom: 24, ...Platform.select({ web: { boxShadow: '0px 10px 15px rgba(79, 70, 229, 0.3)' }, default: { shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 } }) },
   balanceLabel: { color: '#E0E7FF', fontSize: 16, marginBottom: 8 },
   balanceValue: { color: '#FFFFFF', fontSize: 40, fontWeight: 'bold' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
   analyticsScroll: { marginBottom: 24, paddingBottom: 8, flexDirection: 'row' },
-  analyticCard: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, marginRight: 12, minWidth: 120, borderWidth: 1, borderColor: '#F3F4F6', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  analyticCard: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 16, marginRight: 12, minWidth: 120, borderWidth: 1, borderColor: '#F3F4F6', ...Platform.select({ web: { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)' }, default: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 } }) },
   analyticCat: { fontSize: 14, color: '#6B7280', marginBottom: 8 },
   analyticAmt: { fontSize: 20, fontWeight: 'bold', color: '#111827' },
   listContent: { paddingHorizontal: 20, paddingBottom: 100 },
   emptyContainer: { alignItems: 'center', marginTop: 40 },
   emptyText: { fontSize: 18, fontWeight: 'bold', color: '#374151', marginTop: 16 },
   emptySubText: { fontSize: 14, color: '#6B7280', marginTop: 8 },
-  fab: { position: Platform.OS === 'web' ? 'fixed' : 'absolute', right: 24, bottom: 24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#4F46E5', alignItems: 'center', justifyContent: 'center', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8, zIndex: 999 },
+  fab: { position: Platform.OS === 'web' ? 'fixed' : 'absolute', right: 24, bottom: 24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#4F46E5', alignItems: 'center', justifyContent: 'center', zIndex: 999, ...Platform.select({ web: { boxShadow: '0px 8px 10px rgba(79, 70, 229, 0.4)' }, default: { shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 8 } }) },
 });
 
 export default Dashboard;

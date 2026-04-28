@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, SafeAreaView, ActivityIndicator, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, Alert, TouchableOpacity, ActivityIndicator, StyleSheet, ScrollView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import api from '../api/axios';
 import { Feather } from '@expo/vector-icons';
 
 const CATEGORIES = [
@@ -21,7 +22,6 @@ const EditExpense = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const API_URL = 'http://172.16.33.96:5000/api/expenses';
 
   useEffect(() => {
     if (item) {
@@ -46,12 +46,15 @@ const EditExpense = ({ route, navigation }) => {
       const token = await AsyncStorage.getItem('token');
       const config = { headers: { 'x-auth-token': token } };
 
-      await axios.put(`${API_URL}/${item._id}`, {
+      await api.put(`/expenses/${item._id}`, {
         amount: Number(amount),
         category: category,
         note: note.trim()
       }, config);
       
+      if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+        document.activeElement.blur();
+      }
       navigation.goBack();
     } catch (error) {
       console.error(error);
@@ -84,8 +87,11 @@ const EditExpense = ({ route, navigation }) => {
       const token = await AsyncStorage.getItem('token');
       const config = { headers: { 'x-auth-token': token } };
 
-      await axios.delete(`${API_URL}/${item._id}`, config);
+      await api.delete(`/expenses/${item._id}`, config);
       
+      if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+        document.activeElement.blur();
+      }
       navigation.goBack();
     } catch (error) {
       console.error(error);
@@ -99,7 +105,15 @@ const EditExpense = ({ route, navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+                document.activeElement.blur();
+              }
+              navigation.goBack();
+            }} 
+            style={styles.backBtn}
+          >
             <Feather name="arrow-left" size={24} color="#111827" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Expense</Text>
@@ -199,7 +213,7 @@ const styles = StyleSheet.create({
   inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 16, marginBottom: 24 },
   textInput: { flex: 1, fontSize: 16, color: '#111827', outlineStyle: 'none' },
   footer: { paddingTop: 24, paddingBottom: 40, backgroundColor: '#FFFFFF' },
-  saveBtn: { backgroundColor: '#4F46E5', borderRadius: 16, paddingVertical: 18, alignItems: 'center', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4, marginBottom: 16 },
+  saveBtn: { backgroundColor: '#4F46E5', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginBottom: 16, ...Platform.select({ web: { boxShadow: '0px 4px 8px rgba(79, 70, 229, 0.3)' }, default: { shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 } }) },
   saveBtnText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   deleteBtn: { flexDirection: 'row', backgroundColor: '#FEF2F2', borderRadius: 16, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FEE2E2' },
   deleteBtnText: { color: '#EF4444', fontSize: 16, fontWeight: 'bold' },

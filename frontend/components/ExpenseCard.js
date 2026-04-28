@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -18,7 +18,12 @@ const ExpenseCard = ({ item }) => {
   return (
     <TouchableOpacity 
       activeOpacity={0.7} 
-      onPress={() => navigation.navigate('EditExpense', { item })}
+      onPress={() => {
+        if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+          document.activeElement.blur();
+        }
+        navigation.navigate('EditExpense', { item });
+      }}
       style={styles.card}
     >
       <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
@@ -46,11 +51,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+    }),
     borderWidth: 1,
     borderColor: '#F3F4F6',
   },

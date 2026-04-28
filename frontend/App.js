@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Ignore specific warnings caused by react-navigation on react-native-web
 LogBox.ignoreLogs(['props.pointerEvents is deprecated']);
@@ -45,10 +46,12 @@ const MainNavigator = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppProvider>
-        <MainNavigator />
-      </AppProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppProvider>
+          <MainNavigator />
+        </AppProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

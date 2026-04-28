@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Feather } from '@expo/vector-icons';
 
@@ -13,7 +14,6 @@ const Signup = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useContext(AuthContext);
 
-  const API_URL = 'http://172.16.33.96:5000/api/auth/register';
 
   const handleSignup = async () => {
     if (!name || !email || !password) {
@@ -23,7 +23,7 @@ const Signup = ({ navigation }) => {
 
     try {
       setLoading(true);
-      const res = await axios.post(API_URL, { name, email, password });
+      const res = await api.post('/auth/register', { name, email, password });
       const { token } = res.data;
       
       await AsyncStorage.setItem('token', token);
@@ -43,7 +43,15 @@ const Signup = ({ navigation }) => {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+                document.activeElement.blur();
+              }
+              navigation.goBack();
+            }} 
+            style={styles.backBtn}
+          >
             <Feather name="arrow-left" size={24} color="#374151" />
           </TouchableOpacity>
 
@@ -104,7 +112,15 @@ const Signup = ({ navigation }) => {
           </TouchableOpacity>
         )}
 
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.switchBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement) {
+                document.activeElement.blur();
+              }
+              navigation.goBack();
+            }} 
+            style={styles.switchBtn}
+          >
             <Text style={styles.switchText}>
               Already have an account? <Text style={styles.switchTextBold}>Log In</Text>
             </Text>
@@ -129,7 +145,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 16, color: '#111827', outlineStyle: 'none' },
   eyeIcon: { padding: 8 },
   loader: { marginVertical: 16 },
-  loginBtn: { backgroundColor: '#4F46E5', borderRadius: 16, height: 56, alignItems: 'center', justifyContent: 'center', marginBottom: 24, shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  loginBtn: { backgroundColor: '#4F46E5', borderRadius: 16, height: 56, alignItems: 'center', justifyContent: 'center', marginBottom: 24, ...Platform.select({ web: { boxShadow: '0px 4px 8px rgba(79, 70, 229, 0.3)' }, default: { shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 } }) },
   loginBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
   switchBtn: { alignItems: 'center' },
   switchText: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
