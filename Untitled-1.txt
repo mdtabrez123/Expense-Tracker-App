@@ -1,0 +1,9 @@
+/backend
+  /models
+  /routes
+  server.js
+/frontend
+  /context
+  /screens
+  /components
+  App.js
